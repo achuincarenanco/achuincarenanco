@@ -12,6 +12,8 @@
     <button id="btn-login" disabled="true" onclick="login()">Log in</button>
     <button id="btn-logout" disabled="true" onclick="logout()">Log out</button>
     
+    <p id="user">User credentials</p>
+    
     <script src="https://cdn.auth0.com/js/auth0-spa-js/1.2/auth0-spa-js.production.js"></script>
 <script>
 var auth0,
@@ -34,7 +36,9 @@ window.onload = async () => {
   const isAuthenticated = await auth0.isAuthenticated();
   
   if (isAuthenticated) {
-    // show the gated content
+    document.getElementById("user").innerHTML = JSON.stringify(
+      await auth0.getUser()
+    );
     return;
   }
 
