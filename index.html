@@ -38,7 +38,6 @@ window.onload = async () => {
     var user = JSON.stringify( await auth0.getUser() );
     console.log(user);
     document.getElementById("user").innerHTML = user;
-    updateUI();
     return;
   }
 
