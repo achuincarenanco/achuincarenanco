@@ -31,7 +31,6 @@ const configureClient = async () => {
   
 window.onload = async () => {
   await configureClient();
-  updateUI();
   
   const isAuthenticated = await auth0.isAuthenticated();
   
@@ -39,6 +38,7 @@ window.onload = async () => {
     var user = JSON.stringify( await auth0.getUser() );
     console.log(user);
     document.getElementById("user").innerHTML = user;
+    updateUI();
     return;
   }
 
