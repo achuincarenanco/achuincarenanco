@@ -32,6 +32,8 @@ const configureClient = async () => {
 window.onload = async () => {
   await configureClient();
   
+  updateUI();
+  
   const isAuthenticated = await auth0.isAuthenticated();
   
   if (isAuthenticated) {
