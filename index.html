@@ -11,5 +11,34 @@
     <p>Welcome to our page!</p>
     <button id="btn-login" disabled="true" onclick="login()">Log in</button>
     <button id="btn-logout" disabled="true" onclick="logout()">Log out</button>
+    
+    <script src="https://cdn.auth0.com/js/auth0-spa-js/1.2/auth0-spa-js.production.js"></script>
+<script>
+var auth0,
+    authConfig = {
+      domain: "dev-eor3a371.auth0.com", 
+      clientId: "bnI95ORBGK2McVQ617P71vRIoW0X0RPS"
+    };
+const configureClient = async () => {
+
+  auth0 = await createAuth0Client({
+    domain: authConfig.domain,
+    client_id: authConfig.clientId
+  });
+};
+  
+window.onload = async () => {
+  await configureClient();
+  updateUI();
+}
+
+const updateUI = async () => {
+  const isAuthenticated = await auth0.isAuthenticated();
+
+  console.log('Autheticated: ' + isAuthenticated);
+  document.getElementById("btn-logout").disabled = !isAuthenticated;
+  document.getElementById("btn-login").disabled = isAuthenticated;
+};
+</script>
   </body>
 </html>
