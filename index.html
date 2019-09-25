@@ -36,9 +36,9 @@ window.onload = async () => {
   const isAuthenticated = await auth0.isAuthenticated();
   
   if (isAuthenticated) {
-    document.getElementById("user").innerHTML = JSON.stringify(
-      await auth0.getUser()
-    );
+    var user = JSON.stringify( await auth0.getUser() );
+    console.log(JSON.stringify(user);
+    document.getElementById("user").innerHTML = user;
     return;
   }
 
