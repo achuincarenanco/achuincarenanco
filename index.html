@@ -63,6 +63,9 @@ const updateUI = async () => {
   console.log('Autheticated: ' + isAuthenticated);
   document.getElementById("btn-logout").disabled = !isAuthenticated;
   document.getElementById("btn-login").disabled = isAuthenticated;
+  
+  var user = JSON.stringify( await auth0.getUser() );
+  console.log(user);
 };
   
 const login = async () => {
