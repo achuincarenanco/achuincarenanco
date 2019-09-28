@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<title>Aero Gestión</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<script src="lib/jquery-3.1.1.min.js"></script>
+<script type="text/javascript" src="lib/w2ui.min.js"></script>
+<script type="text/javascript" src="lib/es-ar.js"></script>
+<script type="text/javascript" src="lib/jsonbin.js"></script>
+
+<script type="text/javascript" src="grids.js"></script>
+<script type="text/javascript" src="config.js"></script>
+
+<link rel="stylesheet" type="text/css" href="css/w2ui.min.css"/>
+</head>
+
+<body>
+
+<div id="mainLayout" style="position: relative; width: 100%; height: 100vh"></div>
+
+<script type="text/javascript">
+// jsonbin.io ids
+var binId = '5d87e5bcc8c3810499cc57d6',
+    collectionId = '5d8635604e32f5653c4bba48', // aerodata
+    jsonbinApiKey = '$2a$10$5pdeyOfQ.lLhNXvc.eOn1eeyc2y2QDmBH./T3rWPath03g9YEO.Vq';
+
+var data = {
+    aeronaves: [
+        { recid: 1, marca: "Piper PA-11", matricula: "LV-YRE", obs: "En servicio" },
+        { recid: 2, marca: "Piper PA-38", matricula: "LV-MIR", obs: "En servicio" },
+        { recid: 3, marca: "Cessna 172",  matricula: "LV-GZG", obs: "En servicio" }
+    ],
+    socios: [
+        { recid: 1, nro: 50, nombre: "Seco José Luis", dni: 32323232, cuit: "3434343243",
+          licencia: "34234324343", email: "dfddfdfsd", desde: "01/01/2005",
+          tipo: { id: 1, text: "Piloto" } },
+        { recid: 2, nro: 55, nombre: "Bosio Carlos", dni: 343432434, cuit: "32243243444",
+          licencia: "454545455", email: "dfddfdfsdtrrt", desde: "15/04/2015",
+          tipo: { id: 1, text: "Piloto" } }
+    ],
+    vuelos: [],
+    tarifas: [],
+    combustible: [],
+    conceptos: [],
+    cuentas: [],
+    movs: []
+};
+
+// Listas usadas en selects
+function listaAeronaves() {
+    return updateLista('aeronaves', 'matricula');
+}
+
+function listaSocios() {
+    return updateLista('socios', 'nombre');
+}
+
+function listaConceptos() {
+    return updateLista('conceptos', 'descripcion');
+}
+
+function listaCuentas() {
+    return updateLista('cuentas', 'descripcion');
+}
+
+//=============================================================================
+// On load, create main layout
+//=============================================================================
+$(function () {
+    var pstyle = 'background-color: #F5F6F7; border: 1px solid #dfdfdf; padding: 5px;',
+        initialImg = '<img src="img/aero.jpg"/>';
+
+    w2utils.locale(es);
+
+    //=========================================================================
+    // Main layout
+    //=========================================================================
+    $('#mainLayout').w2layout({
+        name: 'layout',
+        panels: [
+            { type: 'top',  size: 50, resizable: true, style: pstyle,
+              content: '<h2>Aeroclub Huinca Renancó</h2>' },
+            { type: 'left', size: '15%', resizable: true, style: pstyle },
+            { type: 'main', size: '100%', style: pstyle, content: initialImg },
+            { type: 'bottom', size: 50, resizable: true, style: pstyle, content: '' }
+        ]
+    });
+
+    //=========================================================================
+    // Sidebar: opciones
+    //=========================================================================
+    w2ui.layout.content('left', $().w2sidebar({
+        name: 'menu',
+        nodes: [
+            { id: 'aeronaves', text: 'Aeronaves', img: 'icon-folder',
+              onClick: showGrid },
+            { id: 'socios', text: 'Socios/Clientes/Cuentas/Prov', img: 'icon-folder',
+              onClick: showGrid },
+            { id: 'vuelos', text: 'Vuelos', img: 'icon-folder', onClick: showGrid },
+            { id: 'tarifas', text: 'Tarifas', img: 'icon-folder', onClick: showGrid },
+            { id: 'combustible', text: 'Combustible', img: 'icon-folder', onClick: showGrid },
+            { id: 'conceptos', text: 'Conceptos', img: 'icon-folder', onClick: showGrid },
+            { id: 'cuentas', text: 'Cuentas', img: 'icon-folder', onClick: showGrid },
+            { id: 'movs', text: 'Movimientos', img: 'icon-folder', onClick: showGrid },
+            { id: 'ctacte', text: 'Ctas. Ctes.', img: 'icon-folder', onClick: showGrid },
+            { id: 'save', text: 'Guardar datos', img: 'icon-folder', onClick: saveData }
+        ],
+    }));
+
+    // Read JSON data from jsonbin.io
+    /*
+    getBin(binId, jsonbinApiKey, (json) => {
+        console.log('jsonbin data loaded...');
+        data = JSON.parse(json);
+        createGrids();
+    });
+    */
+    createGrids();
+});
+
+//=============================================================================
+// Utilities
+//=============================================================================
+function showGrid(event) {
+    w2ui['layout'].content('main', w2ui[event.target]);
+    w2ui[event.target].refresh();
+}
+
+function saveData() {
+    console.log('Saving data...');
+    console.log(data);
+    updateBin(binId, jsonbinApiKey, JSON.stringify(data), (response) => {
+        alert(response);
+    });
+}
+
+// Update database on grid edition
+function updateData(event) {
+    var grid = event.target;
+
+    // commit changes in w2ui grid
+    w2ui[grid].mergeChanges();
+
+    // store grid records in data records
+    /*
+    data[grid] = [];
+    for (let rec of w2ui[grid].records) {
+        var drec = {};
+        for (let field in rec) {
+            if (field != 'w2ui')
+                drec[field] = rec[field];
+        }
+        data[grid].push(drec);
+    }
+    */
+}
+
+function updateLista(store, fieldName) {
+    var lista = [{id: 0, text: "Elija..."}];
+    for (let rec of w2ui[store].records) {
+        lista.push({ id: rec.recid, text: rec[fieldName]});
+    }
+    return lista;
+}
+
+function existeCuenta(nro) {
+    for (c of w2ui['cuentas'].records) {
+        if (c.recid == nro)
+            return true;
+    }
+    return false;
+}
+
+function updateCuentas(event) {
+    for (let s of listaSocios) {
+        if (!existeCuenta(s.id)) {
+            // add to cuentas w2ui table
+            let cuenta = {recid: s.id, descripcion: s.text};
+            w2ui['cuentas'].add(cuenta);
+            // ad to database
+            db.addRecord('cuentas', cuenta);
+        }
+    }
+}
+
+function today() {
+    return (new Date()).toLocaleString();
+}
+
+// add record with default values to grid and database
+function addDefaultRecord(event) {
+  var grid = event.target,
+      records = w2ui[grid].records,
+      maxrecid = 0,
+      record = null;
+
+  // calculate next recid
+  for (var i=0; i<records.length; i++) {
+    maxrecid = Math.max(records[i].recid, maxrecid);
+  }
+  maxrecid += 1;
+
+  switch (grid) {
+      case 'aeronaves':
+          record = { recid: maxrecid, marca: 'Piper', matricula: 'LV-', obs: ''};
+          break;
+      case 'socios':
+          record = {
+              recid: maxrecid, nro: 1000, nombre: '', dni: '', cuit: '', licencia: '', email: '', desde: '', tipo: tiposSocio[0]
+          };
+          break;
+      case 'vuelos':
+          record = {
+              recid: maxrecid, aeronave: listaAeronaves[0], piloto: listaSocios[0], tipovuelo: tiposVuelo[0], desde: 'Huinca Renancó', hasta: 'local', aterrizajes: 1,
+              odomant: 0, odomact: 0, duracion: 0.0, salida: today(), llegada: today()
+          };
+          break;
+      case 'combustible':
+          record = {
+              recid: maxrecid, fecha: today, origen: listaDepComb[0], destino: listaDepComb[1],
+              litros: 0, remanente: 0, obs: ''
+          };
+          break;
+      case 'tarifas':
+          record = {
+              recid: maxrecid, aeronave: listaAeronaves[0], tipovuelo: tiposVuelo[0],
+              vigente: today, importe: 0.0
+          };
+          break;
+      case 'conceptos':
+          record = {
+              recid: maxrecid, descripcion: 'Nuevo concepto...'
+          };
+          break;
+      case 'cuentas':
+          record = {
+              recid: maxrecid, descripcion: 'Nueva cuenta...'
+          };
+          break;
+      case 'movs':
+          updateLista(listaConceptos, 'conceptos', 'descripcion');
+          updateLista(listaCuentas, 'cuentas', 'descripcion');
+          record = {
+              recid: maxrecid, socio: listaSocios[0], fecha: today, concepto: conceptos[0],
+              debe: 0.0, haber: 0.0, ref: '', obs: ''
+          };
+          break;
+  }
+
+  w2ui[grid].add(record);
+}
+
+// calcula la duración del vuelo y hora de llegada dada la diferencia del odómetro
+function updateVuelo(event) {
+    event.onComplete = function() {
+        switch (event.column) {
+            case 0: { // cuando se seleccione el avión
+                let aeronave = event.value_new.text,
+                    odometroAnterior = 0;
+                // buscamos valor final del odómetro de esta aeronave
+                console.log('aeronave: ' + aeronave);
+                for (let vuelo of w2ui['vuelos'].records) {
+                    console.log('vuelo: ' + JSON.stringify(vuelo.aeronave));
+                    if (vuelo.aeronave == aeronave && odometroAnterior < vuelo.odomact) {
+                        console.log('Odometro anterior found!');
+                        odometroAnterior = vuelo.odomact;
+                    }
+                }
+                console.log('Odometro anterior: ' + odometroAnterior);
+                w2ui['vuelos'].set(event.recid, {odomant: odometroAnterior});
+                break;
+            }
+            case 7: { // cuando se cambia el odómetro de llegada
+                let odomant  = w2ui['vuelos'].getCellValue(event.index, 6),
+                    odomact  = w2ui['vuelos'].getCellValue(event.index, 7),
+                    odomdiff = odomact - odomant,
+                    minutes = odomdiff * 0.6,
+                    hourPercent = (minutes / 60).toFixed(1);
+                // console.log('odomdiff: ' + odomdiff);
+                // console.log('minutes: ' + minutes);
+                w2ui['vuelos'].set(event.recid, {duracion: hourPercent});
+                break;
+            }
+        }
+    };
+}
+
+// Calcula los litros remanentes en la cisterna
+function calcLitrosCisterna(event) {
+        // to do...
+}
+
+// Debitar los vuelos seleccionados
+function debitarVuelos() {
+}
+
+</script>
+
+</body>
+</html>
