@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es-AR">
 <head>
-<title>Aero Gestión</title>
+<title>Aero Gestión: Aeroclub Huinca Renancó</title>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -11,7 +11,6 @@
 <script type="text/javascript" src="lib/jsonbin.js"></script>
 
 <script type="text/javascript" src="grids.js"></script>
-<script type="text/javascript" src="config.js"></script>
 
 <link rel="stylesheet" type="text/css" href="css/w2ui.min.css"/>
 </head>
@@ -21,48 +20,76 @@
 <div id="mainLayout" style="position: relative; width: 100%; height: 100vh"></div>
 
 <script type="text/javascript">
+
+// localStorage.clear();
+
 // jsonbin.io ids
-var binId = '5d87e5bcc8c3810499cc57d6',
+var binId = localStorage.getItem('binId'),
     collectionId = '5d8635604e32f5653c4bba48', // aerodata
     jsonbinApiKey = '$2a$10$5pdeyOfQ.lLhNXvc.eOn1eeyc2y2QDmBH./T3rWPath03g9YEO.Vq';
 
-var data = {
-    aeronaves: [
-        { recid: 1, marca: "Piper PA-11", matricula: "LV-YRE", obs: "En servicio" },
-        { recid: 2, marca: "Piper PA-38", matricula: "LV-MIR", obs: "En servicio" },
-        { recid: 3, marca: "Cessna 172",  matricula: "LV-GZG", obs: "En servicio" }
-    ],
-    socios: [
-        { recid: 1, nro: 50, nombre: "Seco José Luis", dni: 32323232, cuit: "3434343243",
-          licencia: "34234324343", email: "dfddfdfsd", desde: "01/01/2005",
-          tipo: { id: 1, text: "Piloto" } },
-        { recid: 2, nro: 55, nombre: "Bosio Carlos", dni: 343432434, cuit: "32243243444",
-          licencia: "454545455", email: "dfddfdfsdtrrt", desde: "15/04/2015",
-          tipo: { id: 1, text: "Piloto" } }
-    ],
-    vuelos: [],
-    tarifas: [],
-    combustible: [],
-    conceptos: [],
-    cuentas: [],
-    movs: []
+// data records
+var grids = ['aeronaves', 'socios', 'tarifas', 'vuelos', 'combustible',
+             'conceptos', 'cuentas', 'movs'],
+    data = {};
+
+// Read JSON data from jsonbin.io
+function loadBin() {
+    console.log('Loading bin ' + binId + ' ...');
+    getBin(binId, jsonbinApiKey, (json) => {
+        console.log('jsonbin data loaded...');
+        data = JSON.parse(json);
+        updateLists();
+        createGrids();
+    });
+}
+
+var selectList = {
+    tiposSocio: [
+                    { id: 1, text: "Piloto" },
+                    { id: 2, text: "Alumno piloto" },
+                    { id: 3, text: "Socio no piloto" },
+                    { id: 4, text: "Cliente/Proveedor" },
+                    { id: 5, text: "Piloto externo"},
+                    { id: 1000, text: "Cuenta"},
+                    { id: 2000, text: "Otro"}
+                ],
+    depComb:   [
+                    { id: 1, text: "Cisterna" },
+                    { id: 2, text: "LV-YRE" },
+                    { id: 3, text: "LV-MIR" },
+                    { id: 4, text: "LV-GZG"},
+                    { id: 5, text: "Compra"},
+                    { id: 1000, text: "Otro"}
+                ],
+    tiposVuelo: [
+                    { id: 1, text: "Piloto" },
+                    { id: 2, text: "Con instructor" },
+                    { id: 3, text: "Alumno piloto" },
+                    { id: 4, text: "Adaptación" },
+                    { id: 5, text: "Re-adaptación" },
+                    { id: 6, text: "Bautismo" },
+                    { id: 7, text: "Terceros" },
+                    { id: 8, text: "Entrenamiento" },
+                    { id: 9, text: "Taller" },
+                    { id: 1000, text: "Otro" }
+                ]
 };
 
-// Listas usadas en selects
-function listaAeronaves() {
-    return updateLista('aeronaves', 'matricula');
-}
+function updateLists() {
 
-function listaSocios() {
-    return updateLista('socios', 'nombre');
-}
+    // Generate a list (for select) from data stores
+    function updateList(store, fieldName) {
+        selectList[store] = [];
+        for (let rec of data[store]) {
+            selectList[store].push({ id: rec.recid, text: rec[fieldName]});
+        }
+    }
 
-function listaConceptos() {
-    return updateLista('conceptos', 'descripcion');
-}
-
-function listaCuentas() {
-    return updateLista('cuentas', 'descripcion');
+    updateList('aeronaves', 'matricula');
+    updateList('socios', 'nombre');
+    updateList('conceptos', 'descripcion');
+    updateList('cuentas', 'descripcion');
 }
 
 //=============================================================================
@@ -94,8 +121,7 @@ $(function () {
     w2ui.layout.content('left', $().w2sidebar({
         name: 'menu',
         nodes: [
-            { id: 'aeronaves', text: 'Aeronaves', img: 'icon-folder',
-              onClick: showGrid },
+            { id: 'aeronaves', text: 'Aeronaves', img: 'icon-folder', onClick: showGrid },
             { id: 'socios', text: 'Socios/Clientes/Cuentas/Prov', img: 'icon-folder',
               onClick: showGrid },
             { id: 'vuelos', text: 'Vuelos', img: 'icon-folder', onClick: showGrid },
@@ -104,20 +130,22 @@ $(function () {
             { id: 'conceptos', text: 'Conceptos', img: 'icon-folder', onClick: showGrid },
             { id: 'cuentas', text: 'Cuentas', img: 'icon-folder', onClick: showGrid },
             { id: 'movs', text: 'Movimientos', img: 'icon-folder', onClick: showGrid },
-            { id: 'ctacte', text: 'Ctas. Ctes.', img: 'icon-folder', onClick: showGrid },
+            { id: 'ctacte', text: 'Ctas. Ctes.', img: 'icon-folder', onClick: gridSaldos },
             { id: 'save', text: 'Guardar datos', img: 'icon-folder', onClick: saveData }
         ],
     }));
 
-    // Read JSON data from jsonbin.io
-    /*
-    getBin(binId, jsonbinApiKey, (json) => {
-        console.log('jsonbin data loaded...');
-        data = JSON.parse(json);
-        createGrids();
-    });
-    */
-    createGrids();
+    if (binId) {
+        loadBin();
+    } else {
+        w2prompt({label: 'Id:', value: ''})
+        .ok(function(value) {
+            console.log(value);
+            binId = value;
+            localStorage.setItem('binId', binId);
+            loadBin();
+        });
+    }
 });
 
 //=============================================================================
@@ -130,6 +158,9 @@ function showGrid(event) {
 
 function saveData() {
     console.log('Saving data...');
+
+    // update data records
+    data = {};
     console.log(data);
     updateBin(binId, jsonbinApiKey, JSON.stringify(data), (response) => {
         alert(response);
@@ -138,31 +169,8 @@ function saveData() {
 
 // Update database on grid edition
 function updateData(event) {
-    var grid = event.target;
-
-    // commit changes in w2ui grid
     w2ui[grid].mergeChanges();
-
-    // store grid records in data records
-    /*
-    data[grid] = [];
-    for (let rec of w2ui[grid].records) {
-        var drec = {};
-        for (let field in rec) {
-            if (field != 'w2ui')
-                drec[field] = rec[field];
-        }
-        data[grid].push(drec);
-    }
-    */
-}
-
-function updateLista(store, fieldName) {
-    var lista = [{id: 0, text: "Elija..."}];
-    for (let rec of w2ui[store].records) {
-        lista.push({ id: rec.recid, text: rec[fieldName]});
-    }
-    return lista;
+    updateLists();
 }
 
 function existeCuenta(nro) {
@@ -174,13 +182,12 @@ function existeCuenta(nro) {
 }
 
 function updateCuentas(event) {
-    for (let s of listaSocios) {
+    for (let s of selectList['socios']) {
         if (!existeCuenta(s.id)) {
             // add to cuentas w2ui table
             let cuenta = {recid: s.id, descripcion: s.text};
+            data['cuentas'].push(cuenta);
             w2ui['cuentas'].add(cuenta);
-            // ad to database
-            db.addRecord('cuentas', cuenta);
         }
     }
 }
@@ -208,25 +215,28 @@ function addDefaultRecord(event) {
           break;
       case 'socios':
           record = {
-              recid: maxrecid, nro: 1000, nombre: '', dni: '', cuit: '', licencia: '', email: '', desde: '', tipo: tiposSocio[0]
+              recid: maxrecid, nro: 1000, nombre: '', dni: '', cuit: '', licencia: '', email: '', desde: '', tipo: selectList['tiposSocio'][0]
           };
           break;
       case 'vuelos':
           record = {
-              recid: maxrecid, aeronave: listaAeronaves[0], piloto: listaSocios[0], tipovuelo: tiposVuelo[0], desde: 'Huinca Renancó', hasta: 'local', aterrizajes: 1,
+              recid: maxrecid, aeronave: selectList['aeronaves'][0],
+              piloto: selectList['socios'][0], tipovuelo: selectList['tiposVuelo'][0],
+              desde: 'Huinca Renancó', hasta: 'local', aterrizajes: 1,
               odomant: 0, odomact: 0, duracion: 0.0, salida: today(), llegada: today()
           };
           break;
       case 'combustible':
           record = {
-              recid: maxrecid, fecha: today, origen: listaDepComb[0], destino: listaDepComb[1],
-              litros: 0, remanente: 0, obs: ''
+              recid: maxrecid, fecha: today(), origen: selectList['depComb'][0],
+              destino: selectList['depComb'][0], contadorinicial: 0.0, contadorfinal: 0.0,
+              litros: 0.0, remanente: 0.0, obs: ''
           };
           break;
       case 'tarifas':
           record = {
-              recid: maxrecid, aeronave: listaAeronaves[0], tipovuelo: tiposVuelo[0],
-              vigente: today, importe: 0.0
+              recid: maxrecid, aeronave: selectList['aeronaves'][0], pilotos: 0.0, alumnos: 0.0,
+              pilotosext: 0.0, particular: 0.0, instructor: 0.0, vigente: today()
           };
           break;
       case 'conceptos':
@@ -240,11 +250,9 @@ function addDefaultRecord(event) {
           };
           break;
       case 'movs':
-          updateLista(listaConceptos, 'conceptos', 'descripcion');
-          updateLista(listaCuentas, 'cuentas', 'descripcion');
           record = {
-              recid: maxrecid, socio: listaSocios[0], fecha: today, concepto: conceptos[0],
-              debe: 0.0, haber: 0.0, ref: '', obs: ''
+              recid: maxrecid, socio: selectList['socios'][0], fecha: today(),
+              concepto: selectList['conceptos'], debe: 0.0, haber: 0.0, ref: '', obs: ''
           };
           break;
   }

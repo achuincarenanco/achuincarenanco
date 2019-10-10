@@ -14,7 +14,7 @@ var listaDepComb = [
     { id: 2, text: "LV-YRE" },
     { id: 3, text: "LV-MIR" },
     { id: 4, text: "LV-GZG"},
-    { id: 5, text: "Echaniz"},
+    { id: 5, text: "Compra"},
     { id: 1000, text: "Otro"}
 ];
 
