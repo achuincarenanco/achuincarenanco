@@ -17,63 +17,93 @@
 
 <body>
 
-<div id="mainLayout" style="position: relative; width: 100%; height: 100vh"></div>
+<div id="mainLayout" style="position: relative; width: 100%; height: 100vh">
+Cargando datos...
+</div>
 
 <script type="text/javascript">
 
 // localStorage.clear();
 
 // jsonbin.io ids
+// binId collectionId jsonBinApiKey
+// 5d87e5bcc8c3810499cc57d6 5d8635604e32f5653c4bba48 $2a$10$5pdeyOfQ.lLhNXvc.eOn1eeyc2y2QDmBH./T3rWPath03g9YEO.Vq
 var binId = localStorage.getItem('binId'),
-    collectionId = '5d8635604e32f5653c4bba48', // aerodata
-    jsonbinApiKey = '$2a$10$5pdeyOfQ.lLhNXvc.eOn1eeyc2y2QDmBH./T3rWPath03g9YEO.Vq';
+    collectionId = localStorage.getItem('collectionId'),    // aerodata
+    jsonBinApiKey = localStorage.getItem('jsonBinApiKey');
 
 // data records
-var grids = ['aeronaves', 'socios', 'tarifas', 'vuelos', 'combustible',
-             'conceptos', 'cuentas', 'movs'],
-    data = {};
+var grids = ['aeronaves', 'socios', 'tarifas', 'vuelos', 'combustible', 'movs'];
 
 // Read JSON data from jsonbin.io
 function loadBin() {
     console.log('Loading bin ' + binId + ' ...');
-    getBin(binId, jsonbinApiKey, (json) => {
+    getBin(binId, jsonBinApiKey, (json) => {
         console.log('jsonbin data loaded...');
-        data = JSON.parse(json);
-        updateLists();
-        createGrids();
+        var data = JSON.parse(json);
+        createMainLayout();
+        createGrids(data);
+    });
+}
+
+if (binId && collectionId && jsonBinApiKey) {
+    loadBin();
+} else {
+    w2prompt({label: 'Clave:', value: ''})
+    .ok(function(value) {
+        var ids = value.split(' ');
+
+        binId = ids[0];
+        collectionId = ids[1];
+        jsonBinApiKey = ids[2];
+        console.log('binId: ' + binId);
+        console.log('collectionId: ' + collectionId);
+        console.log('jsonBinApiKey: ', jsonBinApiKey);
+        localStorage.setItem('binId', binId);
+        localStorage.setItem('collectionId', collectionId);
+        localStorage.setItem('jsonBinApiKey', jsonBinApiKey);
+        loadBin();
     });
 }
 
 var selectList = {
     tiposSocio: [
-                    { id: 1, text: "Piloto" },
-                    { id: 2, text: "Alumno piloto" },
-                    { id: 3, text: "Socio no piloto" },
-                    { id: 4, text: "Cliente/Proveedor" },
-                    { id: 5, text: "Piloto externo"},
-                    { id: 1000, text: "Cuenta"},
-                    { id: 2000, text: "Otro"}
-                ],
-    depComb:   [
-                    { id: 1, text: "Cisterna" },
-                    { id: 2, text: "LV-YRE" },
-                    { id: 3, text: "LV-MIR" },
-                    { id: 4, text: "LV-GZG"},
-                    { id: 5, text: "Compra"},
-                    { id: 1000, text: "Otro"}
-                ],
+        { id: 1, text: "Piloto" },
+        { id: 2, text: "Alumno piloto" },
+        { id: 3, text: "Socio no piloto" },
+        { id: 4, text: "Cliente/Proveedor" },
+        { id: 5, text: "Piloto externo"},
+        { id: 5000, text: "Cuenta"},
+        { id: 9000, text: "Otro"}
+    ],
+    depComb: [
+        { id: 1, text: "Cisterna" },
+        { id: 2, text: "LV-YRE" },
+        { id: 3, text: "LV-MIR" },
+        { id: 4, text: "LV-GZG"},
+        { id: 5, text: "Compra"},
+        { id: 1000, text: "Otro"}
+    ],
     tiposVuelo: [
-                    { id: 1, text: "Piloto" },
-                    { id: 2, text: "Con instructor" },
-                    { id: 3, text: "Alumno piloto" },
-                    { id: 4, text: "Adaptación" },
-                    { id: 5, text: "Re-adaptación" },
-                    { id: 6, text: "Bautismo" },
-                    { id: 7, text: "Terceros" },
-                    { id: 8, text: "Entrenamiento" },
-                    { id: 9, text: "Taller" },
-                    { id: 1000, text: "Otro" }
-                ]
+        { id: 1, text: "Piloto" },
+        { id: 2, text: "Con instructor" },
+        { id: 3, text: "Alumno piloto" },
+        { id: 4, text: "Adaptación" },
+        { id: 5, text: "Re-adaptación" },
+        { id: 6, text: "Bautismo" },
+        { id: 7, text: "Terceros" },
+        { id: 8, text: "Entrenamiento" },
+        { id: 9, text: "Taller" },
+        { id: 1000, text: "Otro" }
+    ],
+    conceptos: [
+        { id: 1, text: "Vuelos" },
+        { id: 2, text: "Cuota social" },
+        { id: 3, text: "Combustible" },
+        { id: 4, text: "Mantenimiento aeronave" },
+        { id: 5, text: "Alquiler hangar" },
+        { id: 6, text: "Varios" }
+    ]
 };
 
 function updateLists() {
@@ -81,21 +111,19 @@ function updateLists() {
     // Generate a list (for select) from data stores
     function updateList(store, fieldName) {
         selectList[store] = [];
-        for (let rec of data[store]) {
-            selectList[store].push({ id: rec.recid, text: rec[fieldName]});
+        for (let rec of w2ui[store].records) {
+            selectList[store].push({ id: rec.recid, text: rec[fieldName] });
         }
     }
 
     updateList('aeronaves', 'matricula');
     updateList('socios', 'nombre');
-    updateList('conceptos', 'descripcion');
-    updateList('cuentas', 'descripcion');
 }
 
 //=============================================================================
 // On load, create main layout
 //=============================================================================
-$(function () {
+function createMainLayout() {
     var pstyle = 'background-color: #F5F6F7; border: 1px solid #dfdfdf; padding: 5px;',
         initialImg = '<img src="img/aero.jpg"/>';
 
@@ -127,43 +155,62 @@ $(function () {
             { id: 'vuelos', text: 'Vuelos', img: 'icon-folder', onClick: showGrid },
             { id: 'tarifas', text: 'Tarifas', img: 'icon-folder', onClick: showGrid },
             { id: 'combustible', text: 'Combustible', img: 'icon-folder', onClick: showGrid },
-            { id: 'conceptos', text: 'Conceptos', img: 'icon-folder', onClick: showGrid },
-            { id: 'cuentas', text: 'Cuentas', img: 'icon-folder', onClick: showGrid },
             { id: 'movs', text: 'Movimientos', img: 'icon-folder', onClick: showGrid },
             { id: 'ctacte', text: 'Ctas. Ctes.', img: 'icon-folder', onClick: gridSaldos },
             { id: 'save', text: 'Guardar datos', img: 'icon-folder', onClick: saveData }
         ],
     }));
-
-    if (binId) {
-        loadBin();
-    } else {
-        w2prompt({label: 'Id:', value: ''})
-        .ok(function(value) {
-            console.log(value);
-            binId = value;
-            localStorage.setItem('binId', binId);
-            loadBin();
-        });
-    }
-});
+};
 
 //=============================================================================
 // Utilities
 //=============================================================================
 function showGrid(event) {
-    w2ui['layout'].content('main', w2ui[event.target]);
-    w2ui[event.target].refresh();
+    console.log('showing grid ' + event.target);
+    var grid = w2ui[event.target];
+
+    updateLists();
+    // update select lists columns (to refresh content)
+    switch (event.target) {
+        case 'tarifas': grid.getColumn('aeronave').editable =
+                        {type: 'list', items: selectList['aeronaves']};
+                        break;
+        case 'vuelos':  grid.getColumn('aeronave').editable =
+                        {type: 'list', items: selectList['aeronaves']};
+                        grid.getColumn('piloto').editable =
+                        {type: 'list', items: selectList['socios']};
+                        break;
+        case 'movs':    grid.getColumn('socio').editable =
+                        {type: 'list', items: selectList['socios']};
+                        break;
+    }
+    grid.refresh();
+    w2ui['layout'].content('main', grid);
 }
 
 function saveData() {
-    console.log('Saving data...');
+    var bin = {};
 
-    // update data records
-    data = {};
-    console.log(data);
-    updateBin(binId, jsonbinApiKey, JSON.stringify(data), (response) => {
-        alert(response);
+    for (let grid of grids) {
+        w2ui[grid].mergeChanges();
+        bin[grid] = [];
+        for (let rec of w2ui[grid].records) {
+            let datarec = {};
+            for (let field in rec) {
+                if (field != 'w2ui')
+                    datarec[field] = rec[field];
+            }
+            bin[grid].push(datarec);
+        }
+    }
+
+    console.log('bin:');
+    console.log(JSON.stringify(bin));
+
+    // save in JsonBin
+    updateBin(binId, jsonBinApiKey, JSON.stringify(bin), (response) => {
+        var res = JSON.parse(response);
+        alert(res.sucess ? "Datos guardados!" : "Hummmm, un error ocurrió");
     });
 }
 
@@ -173,27 +220,37 @@ function updateData(event) {
     updateLists();
 }
 
-function existeCuenta(nro) {
-    for (c of w2ui['cuentas'].records) {
-        if (c.recid == nro)
-            return true;
-    }
-    return false;
-}
-
-function updateCuentas(event) {
-    for (let s of selectList['socios']) {
-        if (!existeCuenta(s.id)) {
-            // add to cuentas w2ui table
-            let cuenta = {recid: s.id, descripcion: s.text};
-            data['cuentas'].push(cuenta);
-            w2ui['cuentas'].add(cuenta);
-        }
+// Generar un débito cuando se cargan vuelos
+function debitarVuelos(event) {
+    console.log(event.target);
+    if (event.target != 'debitarVuelos')
+        return;
+    for (let recid of w2ui['vuelos'].getSelected()) {
+        var vuelo = w2ui['vuelos'].get(recid),
+            movRecId = maxRecId('movs') + 1;
+        w2ui['movs'].add({
+            recid: movRecId,
+            socio: vuelo.piloto,
+            fecha: today(),
+            concepto: selectList.conceptos[0],
+            debe: calcPrecioVuelo(vuelo),
+            haber: 0.0,
+            ref: "Vuelo " + vuelo.aeronave.text + ' ' + vuelo.salida + ' ' + vuelo.duracion + 'hs',
+            obs: ""
+        });
     }
 }
 
 function today() {
     return (new Date()).toLocaleString();
+}
+
+function maxRecId(records) {
+    var maxrecid = 0;
+    for (var i=0; i<records.length; i++) {
+      maxrecid = Math.max(records[i].recid, maxrecid);
+    }
+    return maxrecid;
 }
 
 // add record with default values to grid and database
@@ -203,11 +260,7 @@ function addDefaultRecord(event) {
       maxrecid = 0,
       record = null;
 
-  // calculate next recid
-  for (var i=0; i<records.length; i++) {
-    maxrecid = Math.max(records[i].recid, maxrecid);
-  }
-  maxrecid += 1;
+  maxrecid = maxRecId(records) + 1;
 
   switch (grid) {
       case 'aeronaves':
@@ -239,20 +292,10 @@ function addDefaultRecord(event) {
               pilotosext: 0.0, particular: 0.0, instructor: 0.0, vigente: today()
           };
           break;
-      case 'conceptos':
-          record = {
-              recid: maxrecid, descripcion: 'Nuevo concepto...'
-          };
-          break;
-      case 'cuentas':
-          record = {
-              recid: maxrecid, descripcion: 'Nueva cuenta...'
-          };
-          break;
       case 'movs':
           record = {
               recid: maxrecid, socio: selectList['socios'][0], fecha: today(),
-              concepto: selectList['conceptos'], debe: 0.0, haber: 0.0, ref: '', obs: ''
+              concepto: selectList['conceptos'][0], debe: 0.0, haber: 0.0, ref: '', obs: ''
           };
           break;
   }
@@ -298,10 +341,6 @@ function updateVuelo(event) {
 // Calcula los litros remanentes en la cisterna
 function calcLitrosCisterna(event) {
         // to do...
-}
-
-// Debitar los vuelos seleccionados
-function debitarVuelos() {
 }
 
 </script>

@@ -1,4 +1,4 @@
-function createGrids() {
+function createGrids(data) {
     // Aeronaves
     $().w2grid({
         name: 'aeronaves',
@@ -13,7 +13,7 @@ function createGrids() {
             { field: 'obs', caption: 'Observaciones', size: '30%', resizable: true,
               editable: {type: 'text'}}
         ],
-        records: data.aeronaves
+        records: data.aeronaves || []
     });
 
     // Socios
@@ -24,7 +24,7 @@ function createGrids() {
         searches: [{ field: 'nombre', caption: 'Apellido', type: 'text' }],
         sortData: [{ field: 'nombre', direction: 'ASC' }],
         onAdd: addDefaultRecord,
-        // onSave: updateData,
+        onSave: updateData,
         // onDelete: deleteRecords,
         columns: [
             { field: 'nro', caption: 'Nro', size: '8%', sortable: true,
@@ -44,7 +44,7 @@ function createGrids() {
             { field: 'tipo', caption: 'Tipo', size: '10%', resizable: true,
               editable: { type: 'list', items: selectList['tiposSocio'] } },
         ],
-        records: data.socios
+        records: data.socios || []
     });
 
     // Tarifas
@@ -83,7 +83,7 @@ function createGrids() {
         toolbar: {
             items: [
                 { type: 'break' },
-                { type: 'button', id: 'genMovs', caption: 'Debitar', img: 'icon-folder',
+                { type: 'button', id: 'debitarVuelos', caption: 'Debitar', img: 'icon-folder',
                   hint: 'Generar movimientos (débitos) de los vuelos seleccionados' }
             ],
             onClick: debitarVuelos
@@ -92,7 +92,7 @@ function createGrids() {
                    { field: 'salida', direction: 'ASC'}],
         sortData: [{ field: 'salida', direction: 'ASC'}],
         onAdd: addDefaultRecord,
-        // onSave: updateData,
+        // onSave: genVueloMov,
         // onDelete: deleteRecords,
         onChange: updateVuelo,
         columns: [
@@ -119,7 +119,7 @@ function createGrids() {
             { field: 'llegada', caption: 'Llegada', size: '15%', resizable: true,
               editable: {type: 'datetime'} }
         ],
-        records: data.vuelos
+        records: data.vuelos || []
     });
 
     // Combustible
@@ -152,39 +152,7 @@ function createGrids() {
               editable: {type: 'number'} },
             { field: 'obs', caption: 'Observaciones', resizable: true, editable: {type: 'text'} },
         ],
-        records: data.combustible
-    });
-
-    // Conceptos
-    $().w2grid( {
-        name: 'conceptos',
-        header: 'Conceptos',
-        show: { header: true, toolbar: true, footer: true, toolbarAdd: true, toolbarDelete: true,
-                toolbarSave: true },
-        onAdd: addDefaultRecord,
-        // onSave: updateData,
-        columns: [
-            { field: 'descripcion', caption: 'Descripción', size: '80%', sortable: true,
-              resizable: true, editable: {type: 'text'} },
-        ],
-        records: data.conceptos
-    });
-
-    // Cuentas
-    $().w2grid({
-        name: 'cuentas',
-        header: 'Cuentas contables',
-        show: { header: true, toolbar: true, footer: true, toolbarAdd: true, toolbarDelete: true,
-                toolbarSave: true },
-        onAdd: addDefaultRecord,
-        // onSave: updateData,
-        // onDelete: deleteRecords,
-        columns: [
-            { field: 'recid', caption: 'Nro', size:'25%', editable: {type: 'number'}},
-            { field: 'descripcion', caption: 'Descripción', size: '80%', sortable: true,
-              resizable: true, editable: {type: 'text'} },
-        ],
-        records: data.cuentas
+        records: data.combustible || []
     });
 
     // Movimientos
@@ -198,7 +166,7 @@ function createGrids() {
         // onDelete: deleteRecords,
         columns: [
             { field: 'socio', caption: 'Socio/Cuenta', size: '25%', sortable: true,
-              resizable: true, editable: {type: 'combo', items: selectList['cuentas']} },
+              resizable: true, editable: {type: 'combo', items: selectList['socios']} },
             { field: 'fecha', caption: 'Fecha', size: '15%', resizable: true,
               editable: {type: 'date'} },
             { field: 'concepto', caption: 'Concepto', size: '30%', resizable: true,
@@ -211,7 +179,7 @@ function createGrids() {
               editable: {type: 'text'} },
             { field: 'obs', caption: 'Observaciones', resizable: true, editable: {type: 'text'} },
         ],
-        records: data.movs
+        records: data.movs || []
     });
 }
 
