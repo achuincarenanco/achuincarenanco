@@ -23,10 +23,12 @@ Cargando datos...
 
 <script type="text/javascript">
 
-// localStorage.clear();
+if ( localStorage.getItem('binId') ) {
+    localStorage.clear();
+}
 
-var binId = localStorage.getItem('binId'),
-    collectionId = localStorage.getItem('collectionId'),    // aerodata
+var binId = '5d87e5bcc8c3810499cc57d6',
+    collectionId = '5d8635604e32f5653c4bba48',    // aerodata
     jsonBinApiKey = localStorage.getItem('jsonBinApiKey');
 
 // data records
@@ -43,21 +45,11 @@ function loadBin() {
     });
 }
 
-if (binId && collectionId && jsonBinApiKey) {
+if (jsonBinApiKey) {
     loadBin();
 } else {
     w2prompt({label: 'Clave:', value: ''})
     .ok(function(value) {
-        var ids = value.split(' ');
-
-        binId = ids[0];
-        collectionId = ids[1];
-        jsonBinApiKey = ids[2];
-        console.log('binId: ' + binId);
-        console.log('collectionId: ' + collectionId);
-        console.log('jsonBinApiKey: ', jsonBinApiKey);
-        localStorage.setItem('binId', binId);
-        localStorage.setItem('collectionId', collectionId);
         localStorage.setItem('jsonBinApiKey', jsonBinApiKey);
         loadBin();
     });
