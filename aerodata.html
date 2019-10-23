@@ -29,7 +29,7 @@ if ( localStorage.getItem('binId') ) {
 
 var binId = '5d87e5bcc8c3810499cc57d6',
     collectionId = '5d8635604e32f5653c4bba48',    // aerodata
-    jsonBinApiKey = localStorage.getItem('jsonBinApiKey');
+    jsonBinApiKey = '$2a$10$5pdeyOfQ.lLhNXvc.eOn1eeyc2y2QDmBH./T3rWPath03g9YEO.Vq'; // localStorage.getItem('jsonBinApiKey');
 
 // data records
 var grids = ['aeronaves', 'socios', 'tarifas', 'vuelos', 'combustible', 'movs'];
@@ -38,8 +38,10 @@ var grids = ['aeronaves', 'socios', 'tarifas', 'vuelos', 'combustible', 'movs'];
 function loadBin() {
     console.log('Loading bin ' + binId + ' ...');
     getBin(binId, jsonBinApiKey, (json) => {
-        console.log('jsonbin data loaded...');
         var data = JSON.parse(json);
+        if (!data.sucess) {
+            alert('Error cargando datos desde el servidor...');
+        }
         createMainLayout();
         createGrids(data);
     });
