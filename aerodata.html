@@ -203,7 +203,7 @@ function saveData() {
     // save in JsonBin
     updateBin(binId, jsonBinApiKey, JSON.stringify(bin), (response) => {
         var res = JSON.parse(response);
-        alert(res.sucess ? "Datos guardados!" : "Hummmm, un error ocurrió");
+        alert(res.success ? "Datos guardados!" : "Hummmm, un error ocurrió");
     });
 }
 
