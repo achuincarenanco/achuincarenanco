@@ -38,9 +38,11 @@ var grids = ['aeronaves', 'socios', 'tarifas', 'vuelos', 'combustible', 'movs'];
 function loadBin() {
     console.log('Loading bin ' + binId + ' ...');
     getBin(binId, jsonBinApiKey, (json) => {
-        var data = JSON.parse(json);
-        if (!data.sucess) {
+        var data = {};
+        if (!json) {
             alert('Error cargando datos desde el servidor...');
+        } else {
+            data = JSON.parse(json);
         }
         createMainLayout();
         createGrids(data);
