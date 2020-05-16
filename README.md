@@ -2,10 +2,10 @@
 
 Sistema de gestión de Aeroclub Huinca Renancó
 
-Gracias a los siguientes servicios gratuitos:
+Desarrollado usando gracias a las siguientes bibliotecas y siguientes servicios gratuitos:
 
-1. [jsonbin](https://jsonbin.io/) para el almacenamiento de datos
-2. [Auth0](https://auth0.com/) para la autenticación
+1. [w2ui](http://w2ui.com/web/) Javascript UI library
+2. [jsonbin](https://jsonbin.io/) para el almacenamiento de datos
 
 ## Características generales
 
@@ -40,3 +40,5 @@ Este sistema permite registrar actividades comunes en un aeroclub, en particular
 - Movimientos:
     - Partida doble: De cuenta a cuenta (tipo asientos)
     - En vuelos con instructor debitar el vuelo debitar al piloto y acreditar al instructor
+
+- Si quieres usar este programa, sólo lo debes descargar de este sitio y adaptar los datos de configuración a tu medida.

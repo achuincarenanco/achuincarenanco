@@ -10,6 +10,7 @@
 <script type="text/javascript" src="lib/es-ar.js"></script>
 <script type="text/javascript" src="lib/jsonbin.js"></script>
 
+<script type="text/javascript" src="config.js"></script>
 <script type="text/javascript" src="grids.js"></script>
 
 <link rel="stylesheet" type="text/css" href="css/w2ui.min.css"/>
@@ -22,86 +23,56 @@ Cargando datos...
 </div>
 
 <script type="text/javascript">
-
-if ( localStorage.getItem('binId') ) {
-    localStorage.clear();
-}
-
 var binId = '5d87e5bcc8c3810499cc57d6',
     collectionId = '5d8635604e32f5653c4bba48',    // aerodata
-    jsonBinApiKey = '$2a$10$5pdeyOfQ.lLhNXvc.eOn1eeyc2y2QDmBH./T3rWPath03g9YEO.Vq'; // localStorage.getItem('jsonBinApiKey');
+    apik = ['$2a$10$5pdeyOfQ', 'eOn1eeyc2y2QDmBH./T3rWPath03g9YEO.Vq'],
+    localStorageKey = 'jsonBinApiKey';
+    secret = localStorage.getItem(localStorageKey) || '            ', // .lLhNXvc.nnn
+    jsonBinApiKey = apik[0] + secret.slice(0,9) + apik[1],
+    user = secret.slice(9) || null;
+
+console.log('secret: ' + secret);
+
+loadDB();
+
+// Read JSON data from jsonbin.io
+function loadDB() {
+    console.log('Loading bin data' + binId + ' ...');
+    getBin(binId, jsonBinApiKey, (json) => {
+        if (!json) {
+            askPassword();
+        } else {
+            createMainLayout();
+            createGrids(JSON.parse(json));
+        }
+    });
+}
+
+function askPassword() {
+    w2prompt({label: 'Clave:', value: ''})
+    .ok(function(value) {
+        localStorage.setItem(localStorageKey, value);
+        jsonBinApiKey = apik[0] + value.slice(0,9) + apik[1];
+        console.log('jsonBINAPIKey: ' + jsonBinApiKey);
+        if (!loadDB()) {
+            $('mainLayout').innerHTML = "Error de autenticación";
+        }
+    });
+}
 
 // data records
 var grids = ['aeronaves', 'socios', 'tarifas', 'vuelos', 'combustible', 'movs'];
 
-// Read JSON data from jsonbin.io
-function loadBin() {
-    console.log('Loading bin ' + binId + ' ...');
-    getBin(binId, jsonBinApiKey, (json) => {
-        var data = {};
-        if (!json) {
-            alert('Error cargando datos desde el servidor...');
-        } else {
-            data = JSON.parse(json);
-        }
-        createMainLayout();
-        createGrids(data);
-    });
-}
-
-if (jsonBinApiKey) {
-    loadBin();
-} else {
-    w2prompt({label: 'Clave:', value: ''})
-    .ok(function(value) {
-        localStorage.setItem('jsonBinApiKey', jsonBinApiKey);
-        loadBin();
-    });
-}
-
 var selectList = {
-    tiposSocio: [
-        { id: 1, text: "Piloto" },
-        { id: 2, text: "Alumno piloto" },
-        { id: 3, text: "Socio no piloto" },
-        { id: 4, text: "Cliente/Proveedor" },
-        { id: 5, text: "Piloto externo"},
-        { id: 5000, text: "Cuenta"},
-        { id: 9000, text: "Otro"}
-    ],
-    depComb: [
-        { id: 1, text: "Cisterna" },
-        { id: 2, text: "LV-YRE" },
-        { id: 3, text: "LV-MIR" },
-        { id: 4, text: "LV-GZG"},
-        { id: 5, text: "Compra"},
-        { id: 1000, text: "Otro"}
-    ],
-    tiposVuelo: [
-        { id: 1, text: "Piloto" },
-        { id: 2, text: "Con instructor" },
-        { id: 3, text: "Alumno piloto" },
-        { id: 4, text: "Adaptación" },
-        { id: 5, text: "Re-adaptación" },
-        { id: 6, text: "Bautismo" },
-        { id: 7, text: "Terceros" },
-        { id: 8, text: "Entrenamiento" },
-        { id: 9, text: "Taller" },
-        { id: 1000, text: "Otro" }
-    ],
-    conceptos: [
-        { id: 1, text: "Vuelos" },
-        { id: 2, text: "Cuota social" },
-        { id: 3, text: "Combustible" },
-        { id: 4, text: "Mantenimiento aeronave" },
-        { id: 5, text: "Alquiler hangar" },
-        { id: 6, text: "Varios" }
-    ]
+    tiposSocio: config.tiposSocio,
+    depComb: config.depositosCombustible,
+    tiposVuelo: config.tiposDeVuelo,
+    conceptos: config.conceptos
 };
 
 function updateLists() {
 
-    // Generate a list (for select) from data stores
+    // Generate a list (for select) from dependent data stores
     function updateList(store, fieldName) {
         selectList[store] = [];
         for (let rec of w2ui[store].records) {
@@ -111,6 +82,11 @@ function updateLists() {
 
     updateList('aeronaves', 'matricula');
     updateList('socios', 'nombre');
+
+    // carga de las aeronaves como depósitos de combustible
+    for (let a of selectList['aeronaves']) {
+        selectList.depComb.push(a);
+    }
 }
 
 //=============================================================================
@@ -162,20 +138,31 @@ function showGrid(event) {
     console.log('showing grid ' + event.target);
     var grid = w2ui[event.target];
 
+    // update dependent select lists columns and refresh content
     updateLists();
-    // update select lists columns (to refresh content)
     switch (event.target) {
-        case 'tarifas': grid.getColumn('aeronave').editable =
-                        {type: 'list', items: selectList['aeronaves']};
-                        break;
-        case 'vuelos':  grid.getColumn('aeronave').editable =
-                        {type: 'list', items: selectList['aeronaves']};
-                        grid.getColumn('piloto').editable =
-                        {type: 'list', items: selectList['socios']};
-                        break;
-        case 'movs':    grid.getColumn('socio').editable =
-                        {type: 'list', items: selectList['socios']};
-                        break;
+        case 'tarifas':
+            grid.getColumn('aeronave').editable =
+                {type: 'list', items: selectList['aeronaves']};
+            break;
+        case 'vuelos':
+            grid.getColumn('aeronave').editable =
+                {type: 'list', items: selectList['aeronaves']};
+            grid.getColumn('piloto').editable =
+                {type: 'list', items: selectList['socios']};
+            break;
+        case 'combustible':
+            grid.getColumn('origen').editable =
+                {type: 'list', items: selectList['depComb']};
+            grid.getColumn('destino').editable =
+                {type: 'list', items: selectList['depComb']};
+            grid.getColumn('piloto').editable =
+                {type: 'list', items: selectList['socios']};
+            break;
+        case 'movs':
+            grid.getColumn('socio').editable =
+                {type: 'list', items: selectList['socios']};
+            break;
     }
     grid.refresh();
     w2ui['layout'].content('main', grid);
